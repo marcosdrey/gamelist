@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container my-5 pb-5">
+    <h1 class="display-1 text-color-main mb-4" style="text-shadow: 0px 0px 5px;">Reviews</h1>
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h3 class="display-6" style="text-shadow: 0px 0px 5px;">Most Reviewed</h3>
+        <div class="change-item-review d-flex gap-2">
+            <button class="btn btn-outline-color-main fs-3 text-color-main-hov rounded-5 px-3 back-btn-review">&lt;</button>
+            <button class="btn btn-outline-color-main fs-3 text-color-main-hov rounded-5 px-3 next-btn-review">&gt;</button>
+        </div>
+    </div>
+    {% for game in games %}
+    <div class="review-block row rounded-2 p-3 shadow-lg {% if not game == games.0 %} d-none {% endif %}" value="{{ forloop.counter0 }}">
+        <div class="col-12 col-md-4 col-lg-3 text-center">
+            <img class="img-thumbnail text-center mb-4" style="max-height: 500px;" src="{{ game.game_image.url }}" alt="Cover of {{ game.title }}">
+        </div>
+        <div class="col-12 col-md-8 col-lg-9 d-flex flex-column justify-content-center">
+            <h3 class="display-3 fw-bold">{{ game.title }}</h3>
+            <div>
+                <p class="fs-5">{{ game.content }}</p>
+                <div class="text-center">
+                    <p class="text-color-main fs-5">Reviews</p>
+                    <span class="d-flex justify-content-center gap-4">
+                        <p>Total Reviews: {% if not game.total_reviews %} -- {% else %}{{game.total_reviews}}{% endif %}</p>
+                        <p>Avaliations: {% if not game.average_rating %} -- {% else %}<span class="btn py-0 px-1 {% if game.average_rating >= 7.5 %}btn-success{% elif game.average_rating >= 6.0 %}btn-warning{% else %}btn-danger{% endif %}">{{game.average_rating|floatformat:1}}</span>{%endif%}</p>
+                    </span>
+                </div>
+            </div>
+            <a class="text-color-main-hov" href="{% url 'game_review-page' game.id %}">Visit Review</a>
+        </div>
+    </div>
+    {% endfor %}
+    <!-- <div class="review-block row rounded-2 p-3 shadow-lg d-none" value="1">
+        <div class="col-12 col-md-4 col-lg-3 text-center">
+            <img class="img-thumbnail text-center mb-4" style="max-height: 500px;" src="{% static 'reviews/img/image_2.jpg' %}" alt="GameName">
+        </div>
+        <div class="col-12 col-md-8 col-lg-9 d-flex flex-column justify-content-center">
+            <h3 class="display-3 fw-bold">Game Name</h3>
+            <div>
+                <p class="fs-5">Lorem ipsum dolor sit amet consectetur adipisicing elit. Rerum dolorum placeat asperiores harum nemo, obcaecati pariatur, totam sunt fugit debitis illum dolore culpa modi magni atque optio provident, in ex architecto! Natus laborum nam non temporibus accusantium, quae quam facilis labore quas officiis corrupti iure nihil commodi, incidunt neque repudiandae ex odio, optio molestias earum nulla. Placeat molestias ipsum recusandae.</p>
+                <div class="text-center">
+                    <p class="text-color-main fs-5">Reviews</p>
+                    <span class="d-flex justify-content-center gap-4">
+                        <p>Total Reviews: N</p>
+                        <p>Avaliations: N</p>
+                    </span>
+                </div>
+            </div>
+        </div>
+    
+    </div>         -->
+</div>
+{% endblock content %}
+{% block 'scripts' %}
+<script src="{% static 'reviews/js/change_reviews.js' %}"></script>
+{% endblock 'scripts' %}

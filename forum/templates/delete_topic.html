@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-4 pb-5">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert {{message.tags}}">
+        {{message}}
+    </div>
+    {% endfor %}
+    {% endif %}
+    <form action="{% url 'delete_topic' topic.id %}" method="POST">
+        {% csrf_token %}
+        <fieldset>
+            <legend>Are you sure you want to delete this topic? </legend>
+        </fieldset>
+        <div class="bg-main-light rounded-2 p-3 shadow-lg row border-bottom border-5">
+            <div class="col-2 col-lg-1 d-flex flex-column align-items-center justify-content-center">
+                <img class="profile-reduced img-fluid" src="{{ topic.author.profile.profile_photo.url }}" alt="user" title="user">
+                <a class="fw-bolder text-color-main-hov text-decoration-none fs-6 limit-text-comment text-center" href="#">{{ topic.author.username }}</a>
+            </div>
+            <div class="col-10 col-lg-11">
+                <div class="border-bottom d-flex gap-3 align-items-center pb-1 mb-2">
+                    <div class="d-flex flex-grow-1 justify-content-between align-items-center">
+                        <h3 class="m-0 fs-2">{{ topic.title }}</h3>
+                    </div>
+                </div>
+                <div class="d-flex flex-column">
+                    <p class="m-0">{{ topic.content }}</p>                   
+                </div>
+            </div>
+        </div>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-color-main btn-lg me-4">Yes, delete this topic.</button>
+            <a href="{% url 'topic' topic.id %}" class="btn btn-lg btn-outline-color-main">No, take me back.</a>
+        </div>
+    </form>
+</div>
+{% endblock content %}

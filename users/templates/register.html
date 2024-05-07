@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container my-4 pb-5" style="max-width: 700px;">
+    <h1 class="text-color-main mb-1">Register</h1>
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert {{message.tags}}">
+        {{message}}
+    </div>
+    {% endfor %}
+    {% endif %}
+    <form action="{% url 'register' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <fieldset>
+            <legend>We're so happy that you want to join our community!</legend>
+        </fieldset>
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
+            <label for="username">Your Username</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+            <label for="email">Your Email</label>
+        </div>
+        <div class="row">
+            <div class="col-12 col-lg-6 form-floating mb-3">
+                <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                <label for="password" class="ms-2 ps-3">Password</label>
+            </div>
+            <div class="col-12 col-lg-6 form-floating mb-3">
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Confirm Password" required>
+                <label for="confirm_password" class="ms-2 ps-3">Confirm Password</label>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="formFile" class="profile_photo">Select a profile photo</label>
+            <input class="form-control" type="file" id="profile_photo" name="profile_photo">
+        </div>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="agree_terms" id="flexCheckDefault" required>
+            <label class="form-check-label" for="flexCheckDefault">
+                I agree with the terms of condition and have read the rules of the Forum
+            </label>
+        </div>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-color-main btn-lg me-4">Create</button>
+            <small>If you already have an account, <a href="login.html" class="text-color-main-hov">click here!</a></small>
+        </div>
+    </form>
+    
+    
+    
+</div>
+{% endblock content%}

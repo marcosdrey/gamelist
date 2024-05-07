@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-4 pb-5">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert {{message.tags}}">
+        {{message}}
+    </div>
+    {% endfor %}
+    {% endif %}
+    <form action="{% url 'create_topic' %}" method="POST">
+        {% csrf_token %}
+        <fieldset>
+            <legend>Create a new topic</legend>
+        </fieldset>
+        <div class="form-floating mb-3">
+
+            <input type="text" class="form-control" id="creation_title" name="title" placeholder="Title" required {% if old_title%}value="{{old_title}}"{% endif %}>
+            <label for="title">Title</label>
+        </div>
+        <div class="form-floating">
+            
+            <textarea class="form-control" placeholder="Content" id="creation_content" name="content" style="height: 350px; resize: none;" required>{% if old_content %}{{old_content}}{% endif %}</textarea>
+            <label for="content">Content:</label>
+            
+        </div>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-color-main btn-lg me-4">Publish</button>
+        </div>
+    </form>
+</div>
+{% endblock content %}

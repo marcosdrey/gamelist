@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="container my-4 pb-5">
+    <h1 class="display-3 text-color-main mb-3" style="text-shadow: 0px 0px 5px;">{{game.title}}</h1>
+    
+    <section id="game_container p-5" class="d-flex flex-column gap-2 border container rounded-4 px-4 py-3">
+        <div class="review-block row rounded-2 p-3 shadow-lg">
+            <div class="col-12 col-md-4 col-lg-3 text-center">
+                <img class="img-thumbnail text-center mb-4" style="max-height: 500px;" src="{{ game.game_image.url }}" alt="Cover of {{ game.title }}">
+            </div>
+            <div class="col-12 col-md-8 col-lg-9 d-flex flex-column justify-content-center">
+                <h3 class="display-3 fw-bold">{{ game.title }}</h3>
+                <div>
+                    <p class="fs-5">{{ game.content }}</p>
+                    <div class="text-center">
+                        <p class="text-color-main fs-5">Reviews</p>
+                        <span class="d-flex justify-content-center align-items-center gap-4">
+                            <p>Total Reviews: {% if not ratings %}--{%else%}{{ratings.count}}{% endif %}</p>
+                            <p>Average: {% if not game.average_rating %} -- {% else %}<span class="btn py-0 px-1 {% if average_rating >= 7.5 %}btn-success{% elif average_rating >= 6.0 %}btn-warning{% else %}btn-danger{% endif %}">{{ average_rating|floatformat:1 }}</span>{%endif%}</p>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="game_comments_container" class="d-flex flex-column gap-2 border container rounded-4 px-4 my-5 py-3">
+        <h3 class="display-6 text-color-main pb-3 mb-4 border-bottom" style="text-shadow: 0px 0px 5px;">Comments</h3>
+        {% if messages %}
+            {% for message in messages %}
+            {% if 'comment-rl' in message.tags %}
+            <div class="alert {{message.tags}}">{{message}}</div>
+            {% endif %}
+            {% endfor %}
+        {% endif %}
+        <div id="my_commentary" class="mb-5">
+            <!-- Essa div caso o usuário esteja logado -->
+            {% if user.is_authenticated and not user_already_rated %}
+            <form action="{% url 'game_review-page' game.id %}" method="POST" name="form_send_comment">
+                {% csrf_token %}
+                {{ gr_form|crispy }}
+                <div class="form-floating">
+                    <textarea class="form-control" placeholder="Leave a comment here" id="user_comment_tarea" name="user_comment_tarea" style="height: 120px; resize: none;" maxlength="1500"></textarea>
+                    <label for="user_comment_tarea">[OPTIONAL] Write your review:</label>
+                </div>
+                <div class="mt-3 text-end">
+                    <button class="btn btn-color-main" type="submit">Send</button>
+                </div>
+            </form>
+            {% elif user.is_authenticated and user_already_rated %}
+            <div class="bg-black text-center p-3 rounded-2">
+                <p class="fs-3 m-0">You've already rated: {{ user_already_rated.rating }}</p>
+                <form action="{% url 'game_review-page' game.id %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-color-main my-3">Click Here to Reset</button>
+                </form>
+            </div>
+            {% else %}
+            <!-- Caso não esteja logado, usar essa: -->
+            <div class="bg-black text-center p-3 rounded-2">
+                <p class="fs-3 m-0">Enter your account to create a comment!</p>
+                <a href="{% url 'login' %}" class="text-light"><button class="btn btn-color-main my-3">Log In</button></a>
+                <p>Or if you're new, create one fastly by <a href="{% url 'register' %}" class="text-color-main-hov">clicking here</a>.</p>
+            </div>
+            {% endif %}
+        </div>
+        <p class="my-0">{{comments|length}} comments</p>
+        <div id="internauts_comments" class="d-flex flex-column gap-4">
+            {% if not comments %}
+            <p class="bg-black p-1 text-center">There are no comments for this topic yet. Be the first one!</p>
+            {% else %}
+            
+            {% for comment in comments %}
+            <div class="rounded-2 p-3 row border">
+                <div class="col-2 col-lg-1 d-flex flex-column align-items-center justify-content-center">
+                    <img class="profile-reduced img-fluid" src="{{ comment.author.profile.profile_photo.url }}" alt="Photo of User: {{ comment.author }}" title="Photo of {{ comment.author }}">
+                    <a class="fw-bolder text-color-main-hov text-decoration-none fs-6 limit-text-comment text-center" href="#" title="{{ comment.author }}">{{ comment.author }}</a>
+                </div>
+                <div class="col-10 col-lg-10 d-flex flex-column gap-1">
+                    <small class="text-secondary-emphasis">Rate: <span class="fw-bolder">{%for r in ratings %}{% if r.user == comment.author %}{{r.rating}}{% endif %}{% endfor %}</span></small>
+                    <p class="m-0">{{ comment.content }}</p>
+                </div>
+                <div class="col-md-12 col-lg-1 d-flex mt-3 justify-content-end">
+                    <div class="d-flex align-items-center gap-3" data-comment-container-btns>
+                        <form action="{% url 'game_review_comment_like' game.id %}" method="POST" data-comment-like>
+                            {% csrf_token %}
+                            <button class="btn border-0 p-0 d-flex flex-column align-items-center" data-comment-btn-like value="{{ comment.id }}">
+                                {% if not user in comment.likes.all %}
+                                <i class="fa-regular fa-thumbs-up text-success" data-comment-iclike-none></i>
+                                {% else %}
+                                <i class="fa-solid fa-thumbs-up text-success" data-comment-iclike-fulfilled></i>
+                                {% endif %}
+                                <span data-comment-likes-count>{{ comment.likes.count }}</span>
+                            </button>
+                        </form>
+                        <form action="{% url 'game_review_comment_dislike' game.id %}" method="POST" data-comment-dislike>
+                            {% csrf_token %}
+                            <button class="btn border-0 p-0 d-flex flex-column align-items-center" data-comment-btn-dislike value="{{ comment.id }}">
+                                {% if not user in comment.dislikes.all %}
+                                <i class="fa-regular fa-thumbs-down text-danger" data-comment-icdislike-none></i>
+                                {% else %}
+                                <i class="fa-solid fa-thumbs-down text-danger" data-comment-icdislike-fulfilled></i>
+                                {% endif %}
+                                <span data-comment-dislikes-count>{{ comment.dislikes.count }}</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </section>
+    
+</div>
+{% endblock content %}
+{% block 'scripts' %}
+<script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
+    crossorigin="anonymous"></script>
+<script src="{% static 'reviews/js/game_avs.js' %}"></script>
+{% endblock 'scripts' %}

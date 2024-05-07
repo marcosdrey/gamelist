@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-4 pb-5">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert {{message.tags}}">
+        {{message}}
+    </div>
+    {% endfor %}
+    {% endif %}
+    <form action="{% url 'edit_topic' topic.id %}" method="POST">
+        {% csrf_token %}
+        <fieldset>
+            <legend>Edit topic</legend>
+        </fieldset>
+        <div class="form-floating mb-3">
+
+            <input type="text" class="form-control" id="creation_title" name="title" placeholder="Title" required value="{{topic.title}}">
+            <label for="title">Title</label>
+        </div>
+        <div class="form-floating">
+            
+            <textarea class="form-control" placeholder="Content" id="creation_content" name="content" style="height: 350px; resize: none;" required>{{ topic.content }}</textarea>
+            <label for="content">Content:</label>
+            
+        </div>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-color-main btn-lg me-4">Confirm Edition</button>
+            <a href="{% url 'topic' topic.id %}" class="btn btn-lg btn-outline-color-main">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock content %}

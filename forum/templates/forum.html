@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container my-5">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert {{message.tags}}">{{ message }}</div>
+    {% endfor %}
+    {% endif%}
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="display-3 text-color-main m-0" style="text-shadow: 0px 0px 5px;">Forum</h1>
+        {% if user.is_authenticated %}
+        <a href="{% url 'create_topic' %}" class="text-decoration-none text-light" title="Create New Topic"><button class="rounded-5 btn btn-lg btn-color-main fs-4"">+</button></a>
+        {% endif %}
+    </div>
+    <h3 class="mb-5">Discover what's the community talking about</h3>
+    <section id="forum_comments_container p-5" class="d-flex flex-column gap-2 border container px-4 py-3">
+        
+        {% for topic in topics %}
+        <div class="bg-main-light rounded-2 p-3 shadow-lg row border-bottom border-5">
+            <div class="col-2 col-lg-1 d-flex flex-column align-items-center justify-content-center">
+                <img class="profile-reduced img-fluid" src="{{ topic.author.profile.profile_photo.url }}" alt="User Photo" title="Photo of {{ topic.author.username }}">
+                <a class="fw-bolder text-color-main-hov text-decoration-none fs-6 limit-text-comment text-center" href="#" title="{{ topic.author.username }}">{{ topic.author.username }}</a>
+            </div>
+            <div class="col-10 col-lg-11">
+                <div class="border-bottom d-flex gap-3 align-items-center pb-1 mb-2">
+                    <div class="d-flex flex-grow-1 justify-content-between align-items-center">
+                        <h3 class="m-0 fs-2">{{ topic.title }}</h3>
+                        <span style="font-size: .8rem; color: #8d8d8d;">{{ topic.likes.count }} people liked this post!</span>
+                    </div>
+                </div>
+                <div class="d-flex flex-column">
+                    <p class="limit-text-comment m-0">{{ topic.content }}</p>
+                    <div class="d-flex justify-content-end">
+                        <a class="text-color-main-hov fw-bold" href="{% url 'topic' topic.id %}">See this topic &gt;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if is_paginated %}
+        <div class="btn-group mt-4 mx-auto" role="group" aria-label="Pagination">
+            {% if page_obj.has_previous %}
+            <a href="?page=1" class="btn px-3 py-2 btn-outline-color-main">First</a>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range%}
+            {% if num == page_obj.number %}
+            <a href="?page={{ num }}" class="btn px-3 py-2 btn-color-main">{{ num }}</a>
+            {% elif num > page_obj.number|add:'-3' or num < page_obj.number|add:'3'%}
+            <a href="?page={{ num }}" class="btn px-3 py-2 btn-outline-color-main">{{ num }}</a>
+            {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.paginator.num_pages }}" class="btn px-3 py-2 btn-outline-color-main">Last</a>
+            {% endif %}
+            
+        </div>
+        {% endif %}
+    </section>
+        
+</div>
+{% endblock content %}

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="container my-4 pb-5">
+    {% if messages%}
+    {% for message in messages %}
+    <div class="alert {{message.tags}}">
+        {{message}}
+    </div>
+    {% endfor %}
+    {% endif %}
+    <div class="text-center bg-body-tertiary py-5 rounded-3" style="max-width: 700px; margin: auto;">
+        <img class="img-fluid mb-4" style="width: 100px; height: 100px; border-radius: 50%;" src="{{ request.user.profile.profile_photo.url }}" alt="Your Photo">
+        <h1 class="mb-1">That's your profile, {{request.user.username}}!</h1>
+        <h3 class="text-color-main mb-4">{{ request.user.email }}</h3>
+        <button class="btn btn-light" data-edit-profile-btn>Edit Profile</button>
+        <div id="profile_edit_form_container" class="d-none text-center mt-4 mx-auto" style="max-width: 450px;">
+            <form action="{% url 'profile-page' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <fieldset>
+                    <legend>Your credentials:</legend>
+                </fieldset>
+                {{ u_form|crispy }}
+                {{ p_form|crispy }}
+                <button class="btn btn-color-main" type="submit">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block 'scripts' %}
+<script src="{% static 'profile/js/button_edit.js' %}"></script>
+{% endblock 'scripts' %}

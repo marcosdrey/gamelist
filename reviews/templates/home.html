@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container my-5">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert {{message.tags}}">
+        {{message}}
+    </div>
+    {% endfor %}
+    {% endif %}
+    <h1 class="display-3 text-color-main mb-4" style="text-shadow: 0px 0px 5px;">Search anything!</h1>
+    <form class="form-search-game" method="POST" role="search">
+        {% csrf_token %}
+        <div class="input-group shadow-lg">
+            <input class="form-control" type="search" name="search_game" id="search_game" placeholder="What game are you willing to know about?" {% if last_search %}value="{{last_search}}"{%endif%}>
+            <button class="btn btn-color-main btn-lg"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+    </form>
+    <section id="all-initial-comments" class="d-flex flex-column gap-5">
+        {% if games_with_this_name %}
+        <div class="d-flex flex-column gap-5 mb-3">  
+        {% for game in this_page %}
+        <div class="review-block row rounded-2 p-3 shadow-lg">
+            <div class="col-12 col-md-4 col-lg-3 text-center">
+                <img class="img-thumbnail text-center mb-4" style="max-height: 500px;" src="{{ game.game_image.url }}" alt="Cover of {{ game.title }}">
+            </div>
+            <div class="col-12 col-md-8 col-lg-9 d-flex flex-column justify-content-center">
+                <h3 class="display-3 fw-bold">{{ game.title }}</h3>
+                <div>
+                    <p class="fs-5">{{ game.content }}</p>
+                    <div class="text-center">
+                        <p class="text-color-main fs-5">Reviews</p>
+                        <span class="d-flex justify-content-center gap-4">
+                            <p>Total Reviews: {% if not game.total_reviews %} -- {% else %}{{game.total_reviews}}{% endif %}</p>
+                            <p>Avaliations: {% if not game.average_rating %} -- {% else %}<span class="btn py-0 px-1 {% if game.average_rating >= 7.5 %}btn-success{% elif game.average_rating >= 6.0 %}btn-warning{% else %}btn-danger{% endif %}">{{game.average_rating|floatformat:1}}</span>{%endif%}</p>
+                        </span>
+                    </div>
+                </div>
+                <a class="text-color-main-hov" href="{% url 'game_review-page' game.id %}">Visit Review</a>
+            </div>
+        </div>
+        {% endfor %}
+        </div>
+        {% if pages and pages.count > 3 %}
+            <div class="btn-group mt-4 mx-auto" role="group" aria-label="Pagination">
+            {% if this_page.has_previous %}
+            <form method="POST" action="?page=1" class="btn px-2 py-1 btn-outline-color-main">
+                {%csrf_token%}
+                <input class="form-control d-none" type="search" name="search_game" {% if last_search %}value="{{last_search}}"{%endif%}>
+                <button type="submit" class="btn">First</button>
+            </form>
+            {% endif %}
+            {% for num in this_page.paginator.page_range%}
+            {% if num == this_page.number %}
+            <form method="POST" action="?page={{ num }}" class="btn px-2 py-1 btn-color-main">
+                {%csrf_token%}
+                <input class="form-control d-none" type="search" name="search_game" {% if last_search %}value="{{last_search}}"{%endif%}>
+                <button type="submit" class="btn">{{ num }}</button>
+            </form>
+            {% elif num > this_page.number|add:'-3' or num < this_page.number|add:'3'%}
+            <form method="POST" action="?page={{ num }}" class="btn px-2 py-1 btn-outline-color-main">
+                {%csrf_token%}
+                <input class="form-control d-none" type="search" name="search_game" {% if last_search %}value="{{last_search}}"{%endif%}>
+                <button type="submit" class="btn">{{ num }}</button>
+            </form>
+            {% endif %}
+            {% endfor %}
+            {% if this_page.has_next %}
+            <form method="POST" action="?page={{ this_page.paginator.num_pages }}" class="btn px-2 py-1 btn-outline-color-main">
+                {%csrf_token%}
+                <input class="form-control d-none" type="search" name="search_game" {% if last_search %}value="{{last_search}}"{%endif%}>
+                <button type="submit" class="btn">Last</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% elif last_search and not games_with_this_name %}
+        <p class="bg-black text-center py-2">No games with this name...</p>
+        {% endif %}
+        <div class="bg-main-light rounded-2 p-3 shadow-lg row border-bottom border-5">
+            <div class="col-2 col-lg-1 d-flex flex-column align-items-center justify-content-center">
+                <img class="profile-reduced img-fluid" src="{% static 'home/img/initial_adm_photo.png' %}" alt="User Photo" title="Initial Comment Photo">
+                <a class="fw-bolder text-color-main-hov text-decoration-none fs-6 limit-text-comment text-center" href="#" title="ADMs">ADMs</a>
+            </div>
+            <div class="col-10 col-lg-11">
+                <div class="border-bottom d-flex gap-3 align-items-center pb-1 mb-2">
+                    <div class="d-flex flex-grow-1 justify-content-between align-items-center">
+                        <h3 class="m-0 fs-2">About Us</h3>
+                        <span style="font-size: .8rem; color: #8d8d8d;">Posted on 2024-04-20</span>
+                    </div>
+                </div>
+                <div class="d-flex flex-column">
+                    <p class="limit-text-comment m-0">Welcome to the greatest games database of all time! See reviews, discover new games and interact with an engaged community in the forum!</p>
+                </div>
+            </div>
+        </div>
+        <!-- <div class="bg-main-light rounded-2 p-3 shadow-lg">
+            <div class="border-bottom d-flex gap-3 align-items-center pb-1 mb-3">
+                <div>
+                    <img class="profile-reduced img-fluid" src="{% static 'home/img/image_1.jpg' %}" alt="user" title="user">
+                </div>
+                <div class="d-flex flex-column flex-grow-1">
+                    <h3 class="m-0 fs-2">About Us</h3>
+                    <span class="d-flex justify-content-between">
+                        <a class="fw-bolder text-color-main-hov text-decoration-none fs-5" href="#">User</a>
+                        <p class="text-end fst-italic">Posted on <strong>2024-04-20</strong></p>
+                    </span>
+                </div>
+            </div>
+            <div>
+                <p>Welcome to the greatest games database of all time! See reviews, discover new games and interact with an engaged community in the forum!</p>
+            </div>
+        
+        </div>              -->
+    </section>
+</div>
+{% endblock content %}
