@@ -15,7 +15,9 @@
     </div>
     <h3 class="mb-5">Discover what's the community talking about</h3>
     <section id="forum_comments_container p-5" class="d-flex flex-column gap-2 border container px-4 py-3">
-        
+        {% if not topics %}
+        <p>No topics created yet. Create one by sign in your account or by admin page.</p>
+        {% endif %}
         {% for topic in topics %}
         <div class="bg-main-light rounded-2 p-3 shadow-lg row border-bottom border-5">
             <div class="col-2 col-lg-1 d-flex flex-column align-items-center justify-content-center">
