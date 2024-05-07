@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Sofia+Sans:ital,wght@0,1..1000;1,1..1000&display=swap');
+
+:root {
+    --main_font: "Sofia Sans", sans-serif;
+    --color_light00: #F6E8EA;
+    --color_main00: #ED1C24;
+    --color_main01: #AA0E13;
+    --color_main02: #71090D;
+    --color_dark00: #210807;
+    --color_dark01: #320C0B;
+}
+
+* {
+    font-family: var(--main_font)
+}
+
+.text-color-main, .text-color-main-hov {
+    color: var(--color_main00);
+}
+
+.text-color-main-hov:hover {
+    color: var(--color_main01);
+}
+
+.navbar {
+    background-color: #212529; 
+}
+
+.btn-color-main {
+    background-color: var(--color_main00);
+}
+.btn-color-main:hover {
+    background-color: var(--color_main01);
+}
+
+.btn-outline-color-main {
+    border: 1px solid var(--color_main00);
+}
+
+.btn-outline-color-main:hover {
+    background-color: var(--color_main00);
+    color: var(--color_light00);
+}
+
+.btn-outline-color-main:active {
+    background-color: var(--color_main02);
+}
+
+main {
+    margin-top: 60px;
+    min-height: 800px;
+}
+
+.form-search-game {
+    width: 70%;
+    margin: 0 auto 4rem;
+}
+
+.form-search-game input[type='search'] {
+    font-size: 1.2rem;
+    height: 4rem;
+    background-color: var(--color_light00);
+    color: black;
+}
+
+.card-images {
+    height: 600px;
+}
+
+@media screen and (max-width: 992px) {
+    .form-search-game input[type='search'] {
+        height: 3rem;
+    }
+}
+
+.form-search-game input[type='search']::placeholder {
+    color: gray;
+}
+
+.bg-main-light {
+    background-color: var(--color_light00);
+    color: var(--color_dark00);
+}
+
+footer {
+    min-height: 150px;
+}
+
+.bg-main-color {
+    background-color: var(--color_main00);
+    color: var(--color_light00);
+}
+
+.profile-reduced {
+    border-radius: 50%;
+    height: 60px;
+    width: 60px;
+}
+
+.limit-text-comment {
+    width: 100%;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.text-color-off {
+    color: rgb(155, 155, 155);
+}
