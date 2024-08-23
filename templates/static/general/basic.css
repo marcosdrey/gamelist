@@ -107,3 +107,7 @@ footer {
 .text-color-off {
     color: rgb(155, 155, 155);
 }
+
+.nav_logout_btn {
+    all: unset;
+}

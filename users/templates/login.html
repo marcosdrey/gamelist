@@ -1,26 +1,36 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container my-4 pb-5" style="max-width: 700px;">
-    <h1 class="text-color-main mb-1">Login</h1>
-    {% if messages %}
+    {% if messages%}
     {% for message in messages %}
     <div class="alert {{message.tags}}">
         {{message}}
     </div>
     {% endfor %}
     {% endif %}
+    
+    <h1 class="text-color-main mb-1">Login</h1>
+
+    
+    {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+        <p class="text-danger fw-bold">{{ error }}</p>
+        {% endfor %}
+    {% endif %}
+    
     <form action="{% url 'login' %}" method="POST">
         {% csrf_token %}
         <fieldset>
             <legend>Join your account and be able to interact with the <a href="{% url 'forum' %}" class="text-decoration-none text-color-main-hov">Forum</a>.</legend>
         </fieldset>
+        
         <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
-            <label for="username">Username</label>
-          </div>
-          <div class="form-floating">
-            <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
-            <label for="password">Password</label>
+             {{ form.username }}
+            <label for="{{ form.username.id_for_label }}">Username</label>
+        </div>
+        <div class="form-floating">
+            {{ form.password }}
+            <label for="{{ form.password.id_for_label }}">Password</label>
         </div>
         <div class="mt-4">
             <button type="submit" class="btn btn-color-main btn-lg me-4">Login</button>
@@ -32,3 +42,11 @@
     
 </div>
 {% endblock content %}
+{% block 'scripts' %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelector('#id_username').classList.add('form-control');
+        document.querySelector('#id_password').classList.add('form-control');
+    })
+</script>
+{% endblock 'scripts' %}

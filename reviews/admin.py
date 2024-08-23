@@ -1,7 +1,15 @@
 from django.contrib import admin
-from .models import Game, GameComment, GameRating
+from .models import Game, GameReview
 
-admin.site.register(Game)
-admin.site.register(GameComment)
-admin.site.register(GameRating)
 
+@admin.register(Game)
+class GameAdmin(admin.ModelAdmin):
+    list_display = ('title', 'content', 'game_image')
+    search_fields = ('title',)
+
+
+@admin.register(GameReview)
+class GameReviewAdmin(admin.ModelAdmin):
+    list_display = ('author', 'game', 'rating')
+    search_fields = ('game',)
+    sortable_by = ('rating',)

@@ -1,96 +1,67 @@
+from django.http.response import HttpResponse as HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
-from .models import Profile
 from django.contrib.messages import add_message, constants
-from django.contrib import auth
-from django.contrib.auth.decorators import login_required
-from .forms import UserUpdateForm, ProfileUpdateForm
+from .forms import UserUpdateForm, ProfileUpdateForm, PersonalizedUserCreationForm
+from django.views import View
+from django.views.generic import CreateView
+from django.contrib.auth.views import LogoutView, LoginView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
 
-# Create your views here.
-def register(request):
-    if request.method == 'GET':
+
+class RegisterPageView(CreateView):
+    model = User
+    template_name = 'register.html'
+    form_class = PersonalizedUserCreationForm
+    success_url = reverse_lazy('login')
+
+    def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            add_message(request, constants.WARNING, "You're already logged in!")
             return redirect('home')
-        return render(request, 'register.html')
-    elif request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
-        agree_terms = request.POST.get('agree_terms')
-        profile_photo = request.FILES.get('profile_photo')
-        users = User.objects.filter(username=username)
-        if password != confirm_password:
-            add_message(request, constants.WARNING, 'The passwords are different!')
-            return redirect('register')
-        if len(password) < 6:
-            add_message(request, constants.WARNING, 'Password must have, at least, 6 characters!')
-            return redirect('register')
-        if not agree_terms:
-            add_message(request, constants.WARNING, 'You must agree to the terms and conditions!')
-            return redirect('register')
-        if users.exists():
-            add_message(request, constants.WARNING, 'That username already exists!')
-            return redirect('register')
-        
-        user = User.objects.create_user(
-            username=username, 
-            email=email, 
-            password=password,
-        )
-        if profile_photo:
-            profile = Profile(user=user, profile_photo=profile_photo)
-        else:
-            profile = Profile(user=user)
-        profile.save()
-        
-        add_message(request, constants.SUCCESS, 'Account was created successfully!')
-        return redirect('login')
-        
+        return super().dispatch(request, *args, **kwargs)
 
-def login(request):
-    if request.method == 'GET':
-        if request.user.is_authenticated:
-            add_message(request, constants.WARNING, "You're already logged in!")
-            return redirect('home')
-        return render(request, 'login.html')
-    elif request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = auth.authenticate(request, username=username, password=password)
-        if user:
-            auth.login(request, user)
-            return redirect('home')
-        add_message(request, constants.ERROR, 'Wrong credentials. Try again!')
-        return redirect('login')
-    
+    def get_success_url(self):
+        add_message(self.request, constants.SUCCESS, 'Account was created successfully!')
+        return super().get_success_url()
 
-def logout(request):
-    if request.user.is_authenticated:
-        auth.logout(request)
-        return render(request, 'logout.html')
-    return redirect('login')
 
-@login_required
-def profile(request):
-    if request.method == 'GET':
-        u_form = UserUpdateForm(instance=request.user)
-        p_form = ProfileUpdateForm(instance=request.user.profile)
-        context = {
-            'u_form': u_form,
-            'p_form': p_form
-        }
+class LoginPageView(LoginView):
+    template_name = 'login.html'
+    success_url = reverse_lazy('home')
+    redirect_authenticated_user = True
+
+
+class LogoutPageView(LoginRequiredMixin, LogoutView):
+    template_name = 'logout.html'
+
+class ProfilePageView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        context = self.__get_context(request)
         return render(request, 'profile-page.html', context)
-    elif request.method == 'POST':
-        u_form = UserUpdateForm(request.POST, instance=request.user)
-        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
-        
-        if u_form.is_valid() and p_form.is_valid():
-            u_form.save()
-            p_form.save()
+
+    def post(self, request, *args, **kwargs):
+        context = self.__get_context(request)
+
+        if context['u_form'].is_valid() and context['p_form'].is_valid():
+            context['u_form'].save()
+            context['p_form'].save()
             add_message(request, constants.SUCCESS, 'Changes made successfully!')
         else:
             add_message(request, constants.ERROR, 'Credentials were invalid. Try again.')
         return redirect('profile-page')
-        
+
+    def __get_context(self, request):
+        if request.method == 'GET':
+            user_form = UserUpdateForm(instance=request.user)
+            profile_form = ProfileUpdateForm(instance=request.user.profile)
+
+        elif request.method == 'POST':
+            user_form = UserUpdateForm(request.POST, instance=request.user)
+            profile_form = ProfileUpdateForm(request.POST, request.FILES, 
+                                             instance=request.user.profile)
+        context = {
+                'u_form': user_form,
+                'p_form': profile_form
+            }
+        return context

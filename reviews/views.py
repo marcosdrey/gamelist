@@ -1,107 +1,118 @@
-from typing import Any
-from django.db.models.query import QuerySet
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.contrib.messages import add_message, constants
-from .models import Game, GameComment, GameRating
-from .forms import GameRatingForm
+from .models import Game, GameReview
+from .forms import GameReviewForm
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Avg
 from django.core.paginator import Paginator
-from django.views.generic import ListView, View
+from django.views.generic import ListView, View, DetailView
 
 
-# Create your views here.
+class HomePage(View):
+    def get(self, request, *args, **kwargs):
+        search = request.GET.get('search')
+        context = {}
+        if search:
+            games_matched = Game.objects.filter(title__icontains=search)
+            if not games_matched.exists():
+                return render(request, 'home.html')
+            games_matched = games_matched.annotate(avg_rating=Avg('reviews__rating'), total_reviews=Count('reviews'))
+            games_ordered = games_matched.order_by('-total_reviews', '-avg_rating')
+            p = Paginator(games_ordered, 3)
+            page_number = request.GET.get('page', 1)
+            this_page = p.get_page(page_number)
+            context = {
+                'games_founded': games_ordered,
+                'pages': p,
+                'this_page': this_page
+            }
+        return render(request, 'home.html', context)
 
-def home(request):
-    if request.method == "GET":
-        return render(request, 'home.html')
-    elif request.method == "POST":
-        game_name = request.POST.get('search_game')
-        if not game_name:
-            return render(request, 'home.html')
-        games = Game.objects.filter(title__icontains=game_name)
-        games_annotate = games.annotate(total_reviews=Count('gamerating'), avg_rating=Avg('gamerating__rating'))
-        games_with_this_name = games_annotate.order_by('-total_reviews', '-avg_rating')
-        p = Paginator(games_with_this_name, 3)
-        page_number = request.GET.get('page', 1)
-        page = p.get_page(page_number)
-        return render(request, 'home.html', {'games_with_this_name': games_with_this_name, 'pages': p, 'this_page': page, 'last_search': game_name})
 
-def reviews(request):
-    games = Game.objects.annotate(total_reviews=Count('gamerating'), avg_rating=Avg('gamerating__rating'))
-    context = {
-        'games': games.order_by('-total_reviews', '-avg_rating')[:10]
-    }
-    return render(request, 'reviews.html', context)
+class ReviewsPage(ListView):
+    model = Game
+    template_name = 'reviews.html'
+    context_object_name = 'games'
 
-def game_review(request, pk):
-    game = get_object_or_404(Game, id=pk)
-    comments = GameComment.objects.filter(game=game)
-    ratings = GameRating.objects.filter(game=game)
-    average_rating = game.average_rating
-    try:
-        user_already_rated = ratings.get(user=request.user)
-    except:
-        user_already_rated = None
-        pass
-    if request.method == "GET":
-        gr_form = GameRatingForm(initial={'user': request.user, 'game': game})
-        context = {
-        'game': game, 
-        'gr_form': gr_form, 
-        'comments':comments,
-        'average_rating':average_rating,
-        'ratings':ratings,
-    }
-        if user_already_rated:
-            context['user_already_rated'] = user_already_rated
-        return render(request, 'game_review.html', context)
-    elif request.method == "POST":
-        if 'rating' in request.POST:
-            if user_already_rated:
-                add_message(request, constants.ERROR, "You've already rated!", extra_tags='comment-rl')
-                return redirect('game_review-page', pk)
-            rating = request.POST.get('rating')
-            user_comment = request.POST.get('user_comment_tarea')
-            if user_comment:
-                if len(user_comment) > 1500:
-                    add_message(request, constants.ERROR, "Your comment shouldn't have more than 1500 characters!", extra_tags='comment-rl')
-                    return redirect('game_review-page', pk)
-                this_comment = GameComment(author=request.user, content=user_comment, game=game)
-                this_comment.save()
-            this_rating = GameRating(user=request.user, game=game, rating=rating)
-            this_rating.save()
-            return redirect('game_review-page', pk)
-        else:
-            user_already_rated.delete()
-            user_comment = GameComment.objects.filter(author=request.user, game=game)
-            if user_comment:
-                user_comment.delete()
-            add_message(request, constants.SUCCESS, "You can rate again!", extra_tags='comment-rl')
-            return redirect('game_review-page', pk)
+    def get_queryset(self):
+        querysets = super().get_queryset().annotate(avg_rating=Avg('reviews__rating'), 
+                                                    total_reviews=Count('reviews'))
+        querysets = querysets.order_by('-total_reviews', '-avg_rating')
+        if len(querysets) > 10:
+            querysets = querysets[:10]
+        return querysets
+
+
+class GameReviewPage(DetailView):
+    template_name = "game_review.html"
+    model = Game
+    context_object_name = "game"
+
+    def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            user_already_rated = GameReview.objects.filter(game=self.get_object(), 
+                                                      author=request.user).exists()
+            if not user_already_rated and 'new_comment' in request.POST:
+                form = GameReviewForm(request.POST)
+                if form.is_valid():
+                    comment = request.POST.get('comment')
+                    rating = request.POST.get('rating')
+                    review = GameReview(
+                        author=request.user,
+                        game=self.get_object(),
+                        rating=rating
+                    )
+                    if comment:
+                        review.comment = comment
+                    review.save()
+            elif user_already_rated and 'cancel_comment' in request.POST:
+                GameReview.objects.get(game=self.get_object(), author=request.user).delete()
+                add_message(request, constants.SUCCESS, "You can rate again!", extra_tags='comment-rl')
         
+        return redirect('game_review-page', pk=self.kwargs['pk'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        reviews = GameReview.objects.filter(game=self.get_object())
+        context['comments_count'] = 0
+        if reviews.exists():
+            context['reviews'] = reviews
+            context['comments_count'] = reviews.exclude(comment__isnull=True).count()
+            try:
+                user_already_rated = reviews.get(author=self.request.user)
+                context['user_already_rated'] = user_already_rated
+            except:
+                pass
+            
+        context['gr_form'] = GameReviewForm(initial={
+            'author': self.request.user,
+            'game': self.get_object(),
+        })
+        return context
+
+
 @login_required
 def game_comment_like(request, pk):
     like = False
     dislike_was_active = False
     if request.method == "POST":
         this_game = get_object_or_404(Game, id=pk)
-        comment_id = request.POST['comment_id']
-        this_comment = this_game.comments.get(id=comment_id)
-        if request.user in this_comment.dislikes.all():
-            this_comment.dislikes.remove(request.user)
+        review_id = request.POST['comment_id']
+        this_review = this_game.reviews.get(id=review_id)
+        if request.user in this_review.dislikes.all():
+            this_review.dislikes.remove(request.user)
             dislike_was_active = True
-        if request.user in this_comment.likes.all():
-            this_comment.likes.remove(request.user)
+        if request.user in this_review.likes.all():
+            this_review.likes.remove(request.user)
             like = False
         else:
-            this_comment.likes.add(request.user)
+            this_review.likes.add(request.user)
             like = True
         data = {
             "liked":like,
-            "likes_count":this_comment.likes.all().count(),
+            "likes_count":this_review.likes.all().count(),
             "dislike_was_active":dislike_was_active
         }
         return JsonResponse(data, safe=False)
@@ -114,20 +125,20 @@ def game_comment_dislike(request, pk):
     like_was_active = False
     if request.method == 'POST':
         this_game = get_object_or_404(Game, id=pk)
-        comment_id = request.POST['comment_id']
-        this_comment = this_game.comments.get(id=comment_id)
-        if request.user in this_comment.likes.all():
-            this_comment.likes.remove(request.user)
+        review_id = request.POST['comment_id']
+        this_review = this_game.reviews.get(id=review_id)
+        if request.user in this_review.likes.all():
+            this_review.likes.remove(request.user)
             like_was_active = True
-        if request.user in this_comment.dislikes.all():
-            this_comment.dislikes.remove(request.user)
+        if request.user in this_review.dislikes.all():
+            this_review.dislikes.remove(request.user)
             dislike = False
         else:
-            this_comment.dislikes.add(request.user)
+            this_review.dislikes.add(request.user)
             dislike = True
         data = {
             "disliked":dislike,
-            "dislikes_count":this_comment.dislikes.all().count(),
+            "dislikes_count":this_review.dislikes.all().count(),
             "like_was_active": like_was_active
         }
         return JsonResponse(data, safe=False)

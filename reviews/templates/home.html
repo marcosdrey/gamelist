@@ -10,15 +10,14 @@
     {% endfor %}
     {% endif %}
     <h1 class="display-3 text-color-main mb-4" style="text-shadow: 0px 0px 5px;">Search anything!</h1>
-    <form class="form-search-game" method="POST" role="search">
-        {% csrf_token %}
+    <form class="form-search-game" method="GET" role="search">
         <div class="input-group shadow-lg">
-            <input class="form-control" type="search" name="search_game" id="search_game" placeholder="What game are you willing to know about?" {% if last_search %}value="{{last_search}}"{%endif%}>
+            <input class="form-control" type="search" name="search" id="search_game" placeholder="What game are you willing to know about?">
             <button class="btn btn-color-main btn-lg"><i class="fa-solid fa-magnifying-glass"></i></button>
         </div>
     </form>
     <section id="all-initial-comments" class="d-flex flex-column gap-5">
-        {% if games_with_this_name %}
+        {% if games_founded %}
         <div class="d-flex flex-column gap-5 mb-3">  
         {% for game in this_page %}
         <div class="review-block row rounded-2 p-3 shadow-lg">
@@ -45,37 +44,37 @@
         {% if pages and pages.count > 3 %}
             <div class="btn-group mt-4 mx-auto" role="group" aria-label="Pagination">
             {% if this_page.has_previous %}
-            <form method="POST" action="?page=1" class="btn px-2 py-1 btn-outline-color-main">
-                {%csrf_token%}
-                <input class="form-control d-none" type="search" name="search_game" {% if last_search %}value="{{last_search}}"{%endif%}>
+            <form method="GET" action="" class="btn px-2 py-1 btn-outline-color-main">
+                <input type="hidden" name="search" value="{{ request.GET.search }}">
+                <input type="hidden" name="page" value="1">
                 <button type="submit" class="btn">First</button>
             </form>
             {% endif %}
             {% for num in this_page.paginator.page_range%}
             {% if num == this_page.number %}
-            <form method="POST" action="?page={{ num }}" class="btn px-2 py-1 btn-color-main">
-                {%csrf_token%}
-                <input class="form-control d-none" type="search" name="search_game" {% if last_search %}value="{{last_search}}"{%endif%}>
+            <form method="GET" action="" class="btn px-2 py-1 btn-color-main">
+                <input type="hidden" name="search" value="{{ request.GET.search }}">
+                <input type="hidden" name="page" value="{{ num }}">
                 <button type="submit" class="btn">{{ num }}</button>
             </form>
             {% elif num > this_page.number|add:'-3' or num < this_page.number|add:'3'%}
-            <form method="POST" action="?page={{ num }}" class="btn px-2 py-1 btn-outline-color-main">
-                {%csrf_token%}
-                <input class="form-control d-none" type="search" name="search_game" {% if last_search %}value="{{last_search}}"{%endif%}>
+            <form method="GET" action="" class="btn px-2 py-1 btn-outline-color-main">
+                <input type="hidden" name="search" value="{{ request.GET.search }}">
+                <input type="hidden" name="page" value="{{ num }}">
                 <button type="submit" class="btn">{{ num }}</button>
             </form>
             {% endif %}
             {% endfor %}
             {% if this_page.has_next %}
-            <form method="POST" action="?page={{ this_page.paginator.num_pages }}" class="btn px-2 py-1 btn-outline-color-main">
-                {%csrf_token%}
-                <input class="form-control d-none" type="search" name="search_game" {% if last_search %}value="{{last_search}}"{%endif%}>
+            <form method="GET" action="" class="btn px-2 py-1 btn-outline-color-main">
+                <input type="hidden" name="search" value="{{ request.GET.search }}">
+                <input type="hidden" name="page" value="{{ this_page.paginator.num_pages }}">
                 <button type="submit" class="btn">Last</button>
             </form>
             {% endif %}
         </div>
         {% endif %}
-        {% elif last_search and not games_with_this_name %}
+        {% elif request.GET.search and not games_founded %}
         <p class="bg-black text-center py-2">No games with this name...</p>
         {% endif %}
         <div class="bg-main-light rounded-2 p-3 shadow-lg row border-bottom border-5">
@@ -95,24 +94,7 @@
                 </div>
             </div>
         </div>
-        <!-- <div class="bg-main-light rounded-2 p-3 shadow-lg">
-            <div class="border-bottom d-flex gap-3 align-items-center pb-1 mb-3">
-                <div>
-                    <img class="profile-reduced img-fluid" src="{% static 'home/img/image_1.jpg' %}" alt="user" title="user">
-                </div>
-                <div class="d-flex flex-column flex-grow-1">
-                    <h3 class="m-0 fs-2">About Us</h3>
-                    <span class="d-flex justify-content-between">
-                        <a class="fw-bolder text-color-main-hov text-decoration-none fs-5" href="#">User</a>
-                        <p class="text-end fst-italic">Posted on <strong>2024-04-20</strong></p>
-                    </span>
-                </div>
-            </div>
-            <div>
-                <p>Welcome to the greatest games database of all time! See reviews, discover new games and interact with an engaged community in the forum!</p>
-            </div>
         
-        </div>              -->
     </section>
 </div>
 {% endblock content %}
