@@ -14,6 +14,6 @@ class Profile(models.Model):
             output_size = (300, 300)
             img.thumbnail(output_size)
             img.save(self.profile_photo.path)
-    
+
     def __str__(self):
         return f"Profile of {self.user.username}"

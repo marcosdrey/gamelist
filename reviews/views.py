@@ -2,12 +2,13 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.http import JsonResponse
 from django.contrib.messages import add_message, constants
-from .models import Game, GameReview
-from .forms import GameReviewForm
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Avg
 from django.core.paginator import Paginator
+from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic import ListView, View, DetailView
+from .models import Game, GameReview
+from .forms import GameReviewForm
 
 
 class HomePage(View):
@@ -37,7 +38,7 @@ class ReviewsPage(ListView):
     context_object_name = 'games'
 
     def get_queryset(self):
-        querysets = super().get_queryset().annotate(avg_rating=Avg('reviews__rating'), 
+        querysets = super().get_queryset().annotate(avg_rating=Avg('reviews__rating'),
                                                     total_reviews=Count('reviews'))
         querysets = querysets.order_by('-total_reviews', '-avg_rating')
         if len(querysets) > 10:
@@ -52,8 +53,8 @@ class GameReviewPage(DetailView):
 
     def post(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            user_already_rated = GameReview.objects.filter(game=self.get_object(), 
-                                                      author=request.user).exists()
+            user_already_rated = GameReview.objects.filter(game=self.get_object(),
+                                                           author=request.user).exists()
             if not user_already_rated and 'new_comment' in request.POST:
                 form = GameReviewForm(request.POST)
                 if form.is_valid():
@@ -70,7 +71,7 @@ class GameReviewPage(DetailView):
             elif user_already_rated and 'cancel_comment' in request.POST:
                 GameReview.objects.get(game=self.get_object(), author=request.user).delete()
                 add_message(request, constants.SUCCESS, "You can rate again!", extra_tags='comment-rl')
-        
+
         return redirect('game_review-page', pk=self.kwargs['pk'])
 
     def get_context_data(self, **kwargs):
@@ -78,14 +79,15 @@ class GameReviewPage(DetailView):
         reviews = GameReview.objects.filter(game=self.get_object())
         context['comments_count'] = 0
         if reviews.exists():
-            context['reviews'] = reviews
+            context['reviews'] = reviews.order_by('-likes')
             context['comments_count'] = reviews.exclude(comment__isnull=True).count()
             try:
-                user_already_rated = reviews.get(author=self.request.user)
-                context['user_already_rated'] = user_already_rated
-            except:
-                pass
-            
+                if self.request.user.is_authenticated:
+                    user_already_rated = reviews.get(author=self.request.user)
+                    context['user_already_rated'] = user_already_rated
+            except ObjectDoesNotExist:
+                context['user_already_rated'] = None
+
         context['gr_form'] = GameReviewForm(initial={
             'author': self.request.user,
             'game': self.get_object(),
@@ -111,13 +113,14 @@ def game_comment_like(request, pk):
             this_review.likes.add(request.user)
             like = True
         data = {
-            "liked":like,
-            "likes_count":this_review.likes.all().count(),
-            "dislike_was_active":dislike_was_active
+            "liked": like,
+            "likes_count": this_review.likes.all().count(),
+            "dislike_was_active": dislike_was_active
         }
         return JsonResponse(data, safe=False)
-        
-    return redirect(reverse("game_review-page", pk))
+
+    return redirect(reverse('game_review-page', kwargs={'pk': pk}))
+
 
 @login_required
 def game_comment_dislike(request, pk):
@@ -137,9 +140,9 @@ def game_comment_dislike(request, pk):
             this_review.dislikes.add(request.user)
             dislike = True
         data = {
-            "disliked":dislike,
-            "dislikes_count":this_review.dislikes.all().count(),
+            "disliked": dislike,
+            "dislikes_count": this_review.dislikes.all().count(),
             "like_was_active": like_was_active
         }
         return JsonResponse(data, safe=False)
-    return redirect(reverse("game_review-page", pk))
+    return redirect(reverse('game_review-page', kwargs={'pk': pk}))

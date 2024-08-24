@@ -1,29 +1,25 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils import timezone
-
-# Create your models here.
-class Comment(models.Model):
-    content = models.TextField()
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
-    likes = models.ManyToManyField(User, related_name='comments_liked', blank=True, default=0)
-    dislikes = models.ManyToManyField(User, related_name='comments_disliked', blank=True, default=0)
-    
 
 
 class Topic(models.Model):
-    title = models.CharField(max_length=100)
-    content = models.TextField()
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
-    likes = models.ManyToManyField(User, related_name='topic_liked', blank=True)
-    dislikes = models.ManyToManyField(User, related_name='topic_disliked', blank=True)
-    date_posted = models.DateTimeField(default=timezone.now)
+    title = models.CharField(max_length=100, verbose_name="Título")
+    content = models.TextField(max_length=1000, verbose_name="Conteúdo")
+    author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Autor")
+    likes = models.ManyToManyField(User, related_name='topic_liked', blank=True, verbose_name="Likes")
+    dislikes = models.ManyToManyField(User, related_name='topic_disliked', blank=True, verbose_name="Dislikes")
+    date_posted = models.DateTimeField(auto_now_add=True)
 
-class TopicComment(Comment):
-    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='comments')
-    def save(self, *args, **kwargs):
-        if self.pk:
-            old_comment = TopicComment.objects.get(pk=self.pk)
-            if old_comment.likes.count() == self.likes.count():
-                return super().save(*args, **kwargs)
-        return super().save(*args, **kwargs)
+    def __str__(self):
+        return self.title
+
+
+class TopicReview(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='topic_review', verbose_name="Autor")
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='reviews', verbose_name="Tópico")
+    comment = models.TextField(null=True, blank=True, verbose_name="Comentário")
+    likes = models.ManyToManyField(User, related_name='topic_reviews_liked', blank=True, verbose_name="Likes")
+    dislikes = models.ManyToManyField(User, related_name='topic_reviews_disliked', blank=True, verbose_name="Dislikes")
+
+    def __str__(self):
+        return f"Avaliação de {self.author} em '{self.topic}'"

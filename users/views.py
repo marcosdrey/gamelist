@@ -1,13 +1,12 @@
-from django.http.response import HttpResponse as HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.messages import add_message, constants
-from .forms import UserUpdateForm, ProfileUpdateForm, PersonalizedUserCreationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView
 from django.contrib.auth.views import LogoutView, LoginView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
+from .forms import UserUpdateForm, ProfileUpdateForm, PersonalizedUserCreationForm
 
 
 class RegisterPageView(CreateView):
@@ -35,6 +34,7 @@ class LoginPageView(LoginView):
 class LogoutPageView(LoginRequiredMixin, LogoutView):
     template_name = 'logout.html'
 
+
 class ProfilePageView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         context = self.__get_context(request)
@@ -47,9 +47,10 @@ class ProfilePageView(LoginRequiredMixin, View):
             context['u_form'].save()
             context['p_form'].save()
             add_message(request, constants.SUCCESS, 'Changes made successfully!')
+            return redirect('profile-page')
         else:
-            add_message(request, constants.ERROR, 'Credentials were invalid. Try again.')
-        return redirect('profile-page')
+            context['current_image'] = request.user.profile.profile_photo.url
+            return render(request, 'profile-page.html', context)
 
     def __get_context(self, request):
         if request.method == 'GET':
@@ -58,10 +59,11 @@ class ProfilePageView(LoginRequiredMixin, View):
 
         elif request.method == 'POST':
             user_form = UserUpdateForm(request.POST, instance=request.user)
-            profile_form = ProfileUpdateForm(request.POST, request.FILES, 
+            profile_form = ProfileUpdateForm(request.POST, request.FILES,
                                              instance=request.user.profile)
+
         context = {
-                'u_form': user_form,
-                'p_form': profile_form
-            }
+            'u_form': user_form,
+            'p_form': profile_form
+        }
         return context

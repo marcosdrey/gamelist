@@ -15,6 +15,13 @@
         <fieldset>
             <legend>We're so happy that you want to join our community!</legend>
         </fieldset>
+        {% for field in form %}
+        {% if field.errors %}
+        {% for error in field.errors %}
+        <p class="text-danger fw-bold">{{ error }}</p>
+        {% endfor %}
+        {% endif %}
+        {% endfor %}
         <div class="form-floating mb-3">
             {{ form.username }}
             <label for="{{ form.username.id_for_label }}">Your Username</label>

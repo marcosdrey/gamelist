@@ -1,6 +1,6 @@
 from django import forms
-from .models import GameReview
 from django.core.exceptions import ValidationError
+from .models import GameReview
 
 
 def is_integer(value):

@@ -111,3 +111,10 @@ footer {
 .nav_logout_btn {
     all: unset;
 }
+
+.review_comment_text {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    max-width: 100%;
+}

@@ -35,16 +35,11 @@
             {% endfor %}
         {% endif %}
         <div id="my_commentary" class="mb-5">
-            <!-- Essa div caso o usuário esteja logado -->
             {% if user.is_authenticated and not user_already_rated %}
             <form action="{% url 'game_review-page' game.id %}" method="POST" name="form_send_comment">
                 {% csrf_token %}
                 <input type="hidden" name="new_comment">
                 {{ gr_form|crispy }}
-                <!-- <div class="form-floating">
-                    <textarea class="form-control" placeholder="Leave a comment here" id="user_comment_tarea" name="user_comment_tarea" style="height: 120px; resize: none;" maxlength="1500"></textarea>
-                    <label for="user_comment_tarea">[OPTIONAL] Write your review:</label>
-                </div> -->
                 <div class="mt-3 text-end">
                     <button class="btn btn-color-main" type="submit">Send</button>
                 </div>

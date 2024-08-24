@@ -1,0 +1,4 @@
+[flake8]
+exclude = venv
+ignore = E501
+per-file-ignores = apps.py: F401
