@@ -4,6 +4,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.messages import add_message, constants
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
 from .models import Topic, TopicReview
 from .forms import TopicForm, TopicReviewForm
@@ -68,6 +69,18 @@ class CreateTopicView(LoginRequiredMixin, CreateView):
     context_object_name = 'topic'
     form_class = TopicForm
 
+    def dispatch(self, request, *args, **kwargs):
+        topics_by_this_user = Topic.objects.filter(author=request.user).order_by('-date_posted')
+        if topics_by_this_user.exists():
+            last_topic = topics_by_this_user.first()
+            delta = timezone.now() - last_topic.date_posted
+            minutes_elapsed = delta.total_seconds() / 60
+            if minutes_elapsed < 30:
+                add_message(request, constants.WARNING,
+                            f"You must wait 30 minutes to create a new topic! (Last one was created {minutes_elapsed:.0f} minute(s) ago).")
+                return redirect('forum')
+        return super().dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
         topic = form.save(commit=False)
         topic.author = self.request.user
@@ -94,6 +107,17 @@ class EditTopicView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy('topic', kwargs={'pk': self.object.pk})
 
+    def form_valid(self, form):
+        topic = self.get_object()
+        if topic.content == form.cleaned_data['content'] and topic.title == form.cleaned_data['title']:
+            return redirect('topic', topic.topic.id)
+        topic = form.save(commit=False)
+        if not topic.is_edited:
+            topic.is_edited = True
+        topic.date_edited = timezone.now()
+        topic.save()
+        return super().form_valid(form)
+
 
 class DeleteTopicView(LoginRequiredMixin, DeleteView):
     model = Topic
@@ -107,6 +131,52 @@ class DeleteTopicView(LoginRequiredMixin, DeleteView):
             return super().dispatch(request, *args, **kwargs)
         add_message(request, constants.ERROR, "You don't have permission to access this.")
         return redirect('forum')
+
+
+class EditReviewView(LoginRequiredMixin, UpdateView):
+    model = TopicReview
+    template_name = 'edit_review.html'
+    context_object_name = 'review'
+    form_class = TopicReviewForm
+
+    def dispatch(self, request, *args, **kwargs):
+        review = self.get_object()
+        if review.author == request.user:
+            return super().dispatch(request, *args, **kwargs)
+        add_message(request, constants.ERROR, "You don't have permission to access this.")
+        return reverse_lazy('topic', kwargs={'pk': review.topic.id})
+
+    def get_success_url(self):
+        review = self.get_object()
+        topic_id = review.topic.id
+        return reverse_lazy('topic', kwargs={'pk': topic_id})
+
+    def form_valid(self, form):
+        review = self.get_object()
+        if review.comment == form.cleaned_data['comment']:
+            return redirect('topic', review.topic.id)
+        review = form.save(commit=False)
+        if not review.is_edited:
+            review.is_edited = True
+        review.date_edited = timezone.now()
+        review.save()
+        return super().form_valid(form)
+
+
+class DeleteReviewView(DeleteView):
+    model = TopicReview
+
+    def dispatch(self, request, *args, **kwargs):
+        review = self.get_object()
+        if request.method == 'POST' and review.author == request.user:
+            return super().dispatch(request, *args, **kwargs)
+        add_message(request, constants.ERROR, "You don't have permission to access this.")
+        return reverse_lazy('topic', kwargs={'pk': review.topic.id})
+
+    def get_success_url(self):
+        review = self.get_object()
+        topic_id = review.topic.id
+        return reverse_lazy('topic', kwargs={'pk': topic_id})
 
 
 @login_required

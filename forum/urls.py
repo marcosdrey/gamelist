@@ -8,6 +8,8 @@ urlpatterns = [
     path('topic/<int:pk>/edit/', views.EditTopicView.as_view(), name="edit_topic"),
     path('topic/<int:pk>/delete/', views.DeleteTopicView.as_view(), name="delete_topic"),
 
+    path('comment/<int:pk>/edit/', views.EditReviewView.as_view(), name='edit_review'),
+    path('comment/<int:pk>/delete/', views.DeleteReviewView.as_view(), name='delete_review'),
 
     path('topic/<int:pk>/like_topic', views.liked_topic, name="liked_topic"),
     path('topic/<int:pk>/dislike_topic', views.disliked_topic, name="disliked_topic"),

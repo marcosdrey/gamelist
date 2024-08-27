@@ -35,6 +35,13 @@
                     </div>
                 </div>
                 <div class="d-flex flex-column">
+                    <small class="text-secondary text-end">
+                        {% if topic.is_edited %}
+                        <span class="text-danger">Edited {{topic.date_edited|timesince }} ago</span> - 
+                        {% endif %}
+                        Created: {{ topic.date_posted }}
+                    </small>
+                    
                     <p class="m-0">{{ topic.content }}</p>
                     <div class="mt-4 d-flex justify-content-between">
                         <a class="text-color-main-hov fw-bold" href="{% url 'forum' %}">&lt; Back to Forum</a>
@@ -108,7 +115,10 @@
                     <img class="profile-reduced img-fluid" src="{{ review.author.profile.profile_photo.url }}" alt="Photo of User: {{ review.author }}" title="Photo of {{ review.author }}">
                     <a class="fw-bolder text-color-main-hov text-decoration-none fs-6 limit-text-comment text-center" href="#" title="{{ review.author }}">{{ review.author }}</a>
                 </div>
-                <div class="col-10 col-lg-10 d-flex align-items-center">
+                <div class="col-10 col-lg-10 d-flex flex-column">
+                    {% if review.is_edited %}
+                    <p class="m-0 text-danger-emphasis">Edited {{ review.date_edited|timesince }} ago</p>
+                    {% endif %}
                     <p class="m-0 review_comment_text">{{ review.comment }}</p>
                 </div>
                 <div class="col-md-12 col-lg-1 d-flex mt-3 justify-content-end">
@@ -135,6 +145,23 @@
                                 <span data-comment-dislikes-count>{{ review.dislikes.count }}</span>
                             </button>
                         </form>
+                        {% if review.author == request.user %}
+                        <div class="btn-group dropend dropend_comments">
+                            <button type="button" class="btn-no-style dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                              <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'edit_review' review.id %}">Edit</a></li>
+                                <li>
+                                <form action="{% url 'delete_review' review.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button class="dropdown-item text-danger" type="submit">Delete</button>
+                                </form>
+                                
+                                </li>
+                            </ul>
+                          </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

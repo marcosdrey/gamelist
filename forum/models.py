@@ -8,7 +8,9 @@ class Topic(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Autor")
     likes = models.ManyToManyField(User, related_name='topic_liked', blank=True, verbose_name="Likes")
     dislikes = models.ManyToManyField(User, related_name='topic_disliked', blank=True, verbose_name="Dislikes")
-    date_posted = models.DateTimeField(auto_now_add=True)
+    date_posted = models.DateTimeField(auto_now_add=True, verbose_name="Data Postada")
+    is_edited = models.BooleanField(default=False, verbose_name="Editado")
+    date_edited = models.DateTimeField(null=True, blank=True, verbose_name="Data Editada")
 
     def __str__(self):
         return self.title
@@ -20,6 +22,9 @@ class TopicReview(models.Model):
     comment = models.TextField(null=True, blank=True, verbose_name="Comentário")
     likes = models.ManyToManyField(User, related_name='topic_reviews_liked', blank=True, verbose_name="Likes")
     dislikes = models.ManyToManyField(User, related_name='topic_reviews_disliked', blank=True, verbose_name="Dislikes")
+    date_posted = models.DateTimeField(auto_now_add=True, verbose_name="Data Postada")
+    is_edited = models.BooleanField(default=False, verbose_name="Editado")
+    date_edited = models.DateTimeField(null=True, blank=True, verbose_name="Data Editada")
 
     def __str__(self):
         return f"Avaliação de {self.author} em '{self.topic}'"

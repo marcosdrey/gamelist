@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-4 pb-5">
+    <form action="{% url 'edit_review' review.id %}" method="POST">
+        {% csrf_token %}
+        <fieldset>
+            <legend>Edit review</legend>
+        </fieldset>
+        {% for field in form %}
+        {% if field.errors %}
+        {% for error in field.errors %}
+        <p class="text-danger fw-bold">{{ error }}</p>
+        {% endfor %}
+        {% endif %}
+        {% endfor %}
+        <div class="form-floating mb-3">
+            {{ form.comment }}
+            <label for="{{form.comment.id_for_label}}">Comment:</label>
+        </div>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-color-main btn-lg me-4">Confirm Edition</button>
+            <a href="{% url 'topic' review.topic.id %}" class="btn btn-lg btn-outline-color-main">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock content %}
+{% block 'scripts' %}
+<script>
+    document.addEventListener('DOMContentLoaded', ()=> {
+        document.getElementById('id_comment').classList.add('form-control')
+        document.getElementById('id_comment').style.height='350px'
+    })
+</script>
+{% endblock 'scripts' %}

@@ -4,7 +4,7 @@ from .models import Game, GameReview
 
 @admin.register(Game)
 class GameAdmin(admin.ModelAdmin):
-    list_display = ('title', 'content', 'game_image')
+    list_display = ('title', 'average_rating')
     search_fields = ('title',)
 
 

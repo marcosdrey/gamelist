@@ -9,10 +9,10 @@ class TopicAdmin(admin.ModelAdmin):
     sortable_by = ('show_likes', 'show_dislikes', 'date_posted')
 
     def show_likes(self, obj):
-        return sum(obj.likes.all())
+        return len(obj.likes.all())
 
     def show_dislikes(self, obj):
-        return sum(obj.dislikes.all())
+        return len(obj.dislikes.all())
 
     show_likes.short_description = 'Likes'
     show_dislikes.short_description = 'Dislikes'
@@ -25,10 +25,10 @@ class TopicReviewAdmin(admin.ModelAdmin):
     sortable_by = ('show_likes', 'show_dislikes')
 
     def show_likes(self, obj):
-        return sum(obj.likes.all())
+        return len(obj.likes.all())
 
     def show_dislikes(self, obj):
-        return sum(obj.dislikes.all())
+        return len(obj.dislikes.all())
 
     show_likes.short_description = 'Likes'
     show_dislikes.short_description = 'Dislikes'

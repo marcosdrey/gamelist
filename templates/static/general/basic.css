@@ -108,7 +108,7 @@ footer {
     color: rgb(155, 155, 155);
 }
 
-.nav_logout_btn {
+.btn-no-style {
     all: unset;
 }
 
@@ -117,4 +117,8 @@ footer {
     overflow-wrap: break-word;
     hyphens: auto;
     max-width: 100%;
+}
+
+.dropend_comments ::after {
+    all: unset !important;
 }
